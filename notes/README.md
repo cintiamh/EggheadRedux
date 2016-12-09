@@ -86,4 +86,96 @@ const counter = (state = 0, action) => {
 
 ## Store Methods
 
-The 
+The Store in Redux holds the current application state object, it lets you dispatch actions, and when you
+create it, you need to specify the reducer, which tells how the state will be updated according to the actions.
+
+### `getState`
+
+`store.getState()` - returns the current state object the store's holding.
+
+### `dispatch`
+
+`store.dispatch({ type: 'INCREMENT' })` - dispatches an action.
+
+### `subscribe`
+
+Subscribe a method to be called every time something changes in the store.
+
+This would be our very first, very simple Redux application:
+
+```javascript
+import { createStore } from 'redux';
+const counter = (state = 0, action) => {
+    switch (action.type) {
+        case 'INCREMENT':
+            return state + 1;
+        case 'DECREMENT':
+            return state - 1;
+        default:
+            return state;
+    }
+};
+const store = createStore(counter);
+const render = () => {
+    document.body.innerText = store.getState();
+};
+store.subscribe(render);
+render();
+document.addEventListener('click', () => {
+    store.dispatch({ type: 'INCREMENT' });
+});
+export { counter };
+```
+
+## Using React
+
+```javascript
+import { createStore } from 'redux';
+import React from 'react';
+import ReactDOM from 'react-dom';
+
+const counter = (state = 0, action) => {
+    switch (action.type) {
+        case 'INCREMENT':
+            return state + 1;
+        case 'DECREMENT':
+            return state - 1;
+        default:
+            return state;
+    }
+};
+
+const Counter = ({
+    value,
+    onIncrement,
+    onDecrement
+}) => (
+    <div>
+        <h1>{value}</h1>
+        <button onClick={onIncrement}>+</button>
+        <button onClick={onDecrement}>-</button>
+    </div>
+);
+
+const store = createStore(counter);
+
+const render = () => {
+    ReactDOM.render(
+        <Counter
+            value={store.getState()}
+            onIncrement={() =>
+                store.dispatch({ type: 'INCREMENT' })
+            }
+            onDecrement={() =>
+                store.dispatch({ type: 'DECREMENT' })
+            }
+        />,
+        document.getElementById('root')
+    );
+};
+
+store.subscribe(render);
+render();
+
+export { counter };
+```
