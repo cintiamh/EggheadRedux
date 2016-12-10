@@ -179,3 +179,127 @@ render();
 
 export { counter };
 ```
+
+## Avoiding array mutation with `concat()`, `slice()`, and `...` spread
+
+In order to add a new element to an array, what we would normally do is to do something like:
+
+```javascript
+const addCounter = (list) => {
+  list.push(0);  
+};
+```
+
+But in this case, we're modifying the input array. To avoid that we can use concat instead:
+
+```javascript
+const addCounter = (list) => {
+  return list.concat([0]);  
+};
+```
+
+Or even the new `...spread` from ES6:
+
+```javascript
+const addCounter = (list) => {
+  return [...list, 0];  
+};
+```
+
+The same can be said about removing and element from the array. We normally would use splice as follow:
+
+```javascript
+const removeCounter = (list, index) => {
+  list.splice(index, 1);
+  return list;
+}; 
+```
+
+But splice is mutating the input array. The way we can do this, is by using slice and concat.
+
+```javascript
+const removeCounter = (list, index) => {
+  return list
+    .slice(0, index)
+    .concat(list.slice(index + 1));
+}; 
+```
+
+Or to be more conscise, we can use the spread operator.
+
+```javascript
+const removeCounter = (list, index) => {
+  return [
+    ...list.slice(0, index),
+    ...list.slice(index + 1)
+  ];    
+}; 
+```
+
+Now lets look into adding one of the counters in the array.
+
+```javascript
+const incrementCounter = (list, index) => {
+  list[index]++;
+  return list;
+}
+```
+
+You can see that a mutation is happening in here, so we can try to do something like:
+
+```javascript
+const incrementCounter = (list, index) => {
+    return list
+      .slice(0, index)
+      .concat([list[index] + 1])
+      .concat(list.slice(index + 1));
+}
+```
+
+Which looks a lot like the remove method. We can simplify this with the `...spread` opearator:
+
+```javascript
+const incrementCounter = (list, index) => {
+    return [
+      ...list.slice(0, index),
+      list[index] + 1,
+      ...list.slice(index + 1)
+    ];
+}
+```
+
+## Avoiding Object Mutations with `Object.assign()` and `...spread`
+
+A version with mutation first:
+
+```javascript
+const toggleTodo = (todo) => {
+  todo.completed = !todo.completed;
+  return todo;
+}
+```
+
+Using Object.assign():
+
+```javascript
+const toggleTodo = (todo) => {
+  return Object.assign({}, todo, {
+    completed: !todo.completed
+  });
+}
+```
+
+The first argument is the target object, that's why it's an empty object. And the last argument wins over the 
+previous ones.
+
+We can also use the spread here:
+
+```javascript
+const toggleTodo = (todo) => {
+  return {
+    ...todo,
+    completed: !todo.completed
+  };
+}
+```
+
