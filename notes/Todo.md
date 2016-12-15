@@ -156,3 +156,32 @@ const store = createStore(todoApp);
 
 ## Reducer composition with `combineReducers()`
  
+Because combining multiple reducers is a common practice, Reducer has `combineReducers` methods
+that already takes care of combine those for you.
+
+```javascript
+import { combineReducers } from 'redux';
+
+const todoApp = combineReducers({
+  todos,
+  visibilityFilter
+});
+```
+
+The code above is pretty much the equivalent to the method above.
+
+## Implementing `combineReducers` from scratch
+
+```javascript
+const combineReducers = (reducers) => {
+  return (state = {}, action) => {
+    return Object.keys(reducers).reduce(
+      (nextState, key) => {
+        nextState[key] = reducers[key](state[key], action);
+        return nextState;
+      },
+      {}
+    );
+  };  
+}
+```

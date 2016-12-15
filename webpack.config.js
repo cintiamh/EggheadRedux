@@ -5,7 +5,7 @@ var config = {
     entry: [
         'webpack/hot/dev-server',
         'webpack-dev-server/client?http://localhost:3000',
-        './src/todo.js'
+        './src/reactTodo.js'
     ],
     resolve: {
         root: [
