@@ -49,7 +49,3 @@ const todoApp = combineReducers({
   todos,
   visibilityFilter
 });
-
-const store = createStore(todoApp);
-
-export { todos };
