@@ -172,3 +172,155 @@ const render = () => {
     )
 };
 ```
+
+## Extracting Presentational Components (Todo, TodoList)
+
+Create the presentational components for Todo items and list.
+
+```javascript
+const Todo = ({onClick, completed, text}) => (
+    <li
+        onClick={onClick}
+        style={{
+            textDecoration: completed ? 'line-through' : 'none'
+        }}
+    >
+        {text}
+    </li>
+);
+
+const TodoList = ({todos, onTodoClick}) => (
+    <ul>
+        {todos.map(todo => (
+            <Todo
+                key={todo.id}
+                {...todo}
+                onClick={() => onTodoClick(todo.id)}
+            />
+        ))}
+    </ul>
+);
+```
+
+Inside the TodoApp, replace the `<ul>` with the created components:
+
+```javascript
+class TodoApp extends React.Component {
+    //...
+    <TodoList
+        todos={visibleTodos}
+        onTodoClick={id => {
+            store.dispatch({
+                type: 'TOGGLE_TODO',
+                id
+            })
+        }}
+    />
+    //...
+}
+```
+
+## Extracting Presentational Components (AddTodo, Footer, FilterLink)
+
+```javascript
+const AddTodo = ({onAddClick}) => {
+    let input;
+
+    return (
+        <div>
+            <input ref={node => {
+                input = node;
+            }}/>
+            <button onClick={() => {
+                onAddClick(input.value);
+                input.value = '';
+            }}>
+                Add Todo
+            </button>
+        </div>
+    )
+};
+
+const FilterLink = ({
+    filter,
+    currentFilter,
+    onClick,
+    children
+}) => {
+    if (filter === currentFilter) {
+        return (<span>{children}</span>);
+    }
+    return (
+        <a href="#" onClick={e => {
+            e.preventDefault();
+            onClick(filter);
+        }} >
+            {children}
+        </a>
+    )
+};
+
+const Footer = ({visibilityFilter, onFilterClick}) => {
+    return (
+        <p>
+            Show:
+            {' '}
+            <FilterLink
+                filter="SHOW_ALL"
+                currentFilter={visibilityFilter}
+                onClick={onFilterClick}
+            >All</FilterLink>
+            {' '}
+            <FilterLink
+                filter="SHOW_ACTIVE"
+                currentFilter={visibilityFilter}
+                onClick={onFilterClick}
+            >Active</FilterLink>
+            {' '}
+            <FilterLink
+                filter="SHOW_COMPLETED"
+                currentFilter={visibilityFilter}
+                onClick={onFilterClick}
+            >Completed</FilterLink>
+        </p>
+    )
+};
+```
+
+And now the AddTodo component can be not a class. 
+
+```javascript
+const TodoApp  = ({ todos, visibilityFilter }) => (
+    <div>
+        <AddTodo
+            onAddClick={text => {
+                store.dispatch({
+                    type: 'ADD_TODO',
+                    id: nextTodoId++,
+                    text
+                });
+            }}
+        />
+        <TodoList
+            todos={getVisibleTodos(todos, visibilityFilter)}
+            onTodoClick={id => {
+                store.dispatch({
+                    type: 'TOGGLE_TODO',
+                    id
+                })
+            }}
+        />
+        <Footer
+            visibilityFilter={visibilityFilter}
+            onFilterClick={filter => {
+                store.dispatch({
+                    type: 'SET_VISIBILITY_FILTER',
+                    filter
+                });
+            }}
+        />
+    </div>
+);
+```
+
+## Extracting Presentational Components (FilterLink)
