@@ -324,3 +324,8 @@ const TodoApp  = ({ todos, visibilityFilter }) => (
 ```
 
 ## Extracting Presentational Components (FilterLink)
+
+At this point, we have a lot of components that only receives the info down from its parents, which is not ideal because
+we're passing down a lot of props that are not being immediately used, but just passed to its children.
+
+To solve this, we can have some more container components besides TodoApp.
