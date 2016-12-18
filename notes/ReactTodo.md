@@ -323,9 +323,140 @@ const TodoApp  = ({ todos, visibilityFilter }) => (
 );
 ```
 
-## Extracting Presentational Components (FilterLink)
+## Extracting Container Components (FilterLink)
 
 At this point, we have a lot of components that only receives the info down from its parents, which is not ideal because
 we're passing down a lot of props that are not being immediately used, but just passed to its children.
 
 To solve this, we can have some more container components besides TodoApp.
+
+```javascript
+const Link = ({
+    active,
+    onClick,
+    children
+}) => {
+    if (active) {
+        return (<span>{children}</span>);
+    }
+    return (
+        <a href="#" onClick={e => {
+            e.preventDefault();
+            onClick();
+        }} >
+            {children}
+        </a>
+    )
+};
+
+class FilterLink extends React.Component {
+    componentDidMount() {
+        // this is not really working, but we'll change this soon.
+        this.unsubscribe = store.subscribe(() => {
+            // This is from React to force refresh.
+            this.forceUpdate()
+        });
+    }
+
+    componentWillUnmount() {
+        this.unsubscribe();
+    }
+
+    render() {
+        const props = this.props;
+        // At this point, if the component is not subscribed to the store, it gets stale data.
+        const state = store.getState();
+
+        return (
+            <Link
+                active={
+                    props.filter === state.visibilityFilter
+                }
+                onClick={() => {
+                    store.dispatch({
+                        type: 'VISIBILITY_FILTER',
+                        filter: props.filter
+                    })
+                }}
+            >{props.children}</Link>
+        )
+    }
+}
+```
+
+## Extracting Container Components (VisibleTodoList, AddTodo)
+
+```javascript
+let nextTodoId = 0;
+const AddTodo = () => {
+    let input;
+
+    return (
+        <div>
+            <input ref={node => {
+                input = node;
+            }}/>
+            <button onClick={() => {
+                store.dispatch({
+                    type: 'ADD_TODO',
+                    id: nextTodoId++,
+                    text: input.value
+                });
+                input.value = '';
+            }}>
+                Add Todo
+            </button>
+        </div>
+    )
+};
+
+class VisibleTodoList extends React.Component {
+    componentDidMount() {
+        this.unsubscribe = store.subscribe(() => {
+            this.forceUpdate()
+        });
+    }
+
+    componentWillUnmount() {
+        this.unsubscribe();
+    }
+
+    render() {
+        const props = this.props;
+        const state = store.getState();
+
+        return (
+            <TodoList
+                todos={
+                    getVisibleTodos(state.todos, state.visibilityFilter)
+                }
+                onTodoClick={id => {
+                    store.dispatch({
+                        type: 'TOGGLE_TODO',
+                        id
+                    })
+                }}
+            />
+        )
+    }
+}
+```
+
+And because all TodoApp's components are subscribed themselves to the store, we can remove the render.
+
+```javascript
+const TodoApp  = () => (
+    <div>
+        <AddTodo />
+        <VisibleTodoList />
+        <Footer />
+    </div>
+);
+
+ReactDOM.render(
+    <TodoApp />,
+    document.getElementById('root')
+);
+```
+
+## Passing the store down explicitly via Props
