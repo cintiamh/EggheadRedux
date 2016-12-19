@@ -483,3 +483,200 @@ ReactDOM.render(
 const { store } = this.props;
 ```
 
+## Passing the store down implicitly via context
+
+First we create a Provider component which will be the context provider. It will only render its 
+children.
+
+```javascript
+class Provider extends React.Component {
+    getChildContext() {
+        return {
+            store: this.props.store
+        };
+    }
+
+    render() {
+        return this.props.children;
+    }
+}
+
+Provider.childContextTypes = {
+    store: React.PropTypes.object
+};
+
+ReactDOM.render(
+    <Provider store={createStore(todoApp)}>
+        <TodoApp />
+    </Provider>,
+    document.getElementById('root')
+);
+```
+
+Now we need to make all the containers to receive the store from context, and not props.
+And also we need to set that those components are receiving the context, setting its contextTypes.
+
+```javascript
+class VisibleTodoList extends React.Component {
+    componentDidMount() {
+        const { store } = this.context;
+        // ...
+    }
+}
+VisibleTodoList.contextTypes = {
+    store: React.PropTypes.object
+};
+```
+
+For the functional components like AddTodo, we can retrieve the context as the second argument:
+
+```javascript
+const AddTodo = (props, context) => { /*...*/ }
+AddTodo.contextTypes = {
+    store: React.PropTypes.object
+};
+```
+
+But the concept of context contradicts the principal of React to explicitly pass down properties.
+And the context also is not very stable. Use with caution.
+
+## Passing the store down with `<Provider>` from React Redux
+
+The Provider concept is so useful that it is available in the `react-redux` npm package
+https://www.npmjs.com/package/react-redux
+
+```
+$ npm i react-redux --save
+```
+
+And then import:
+
+```javascript
+import { Provider } from 'react-redux';
+```
+
+This Provider will do exactly the same as the one we implemented before.
+
+## Generating Containers with connect() from ReactRedux (VisibleTodoList)
+
+```javascript
+import { Provider, connect } from 'react-redux';
+
+// This returns the props necessary from the store state
+const mapStateToProps = (state) => {
+    return {
+        todos: getVisibleTodos(
+            state.todos,
+            state.visibilityFilter
+        )
+    }
+};
+
+// This will map the dispatch method from the store.
+const mapDispatchToProps = (dispatch) => {
+    return {
+        onTodoClick: (id) => {
+            dispatch({
+                type: 'TOGGLE_TODO',
+                id
+            })
+        }
+    }
+};
+
+// Connect method from React redux will link the store state and dispatch methods to the presentation component
+// Connect will merge the objects from mapStateToPros, mapDispatchToProps and the component props.
+const VisibleTodoList = connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(TodoList);
+```
+
+## Generating Containers with connect() from ReactRedux (AddTodo)
+
+```javascript
+let nextTodoId = 0;
+let AddTodo = ({ dispatch }) => {
+    let input;
+
+    return (
+        <div>
+            <input ref={node => {
+                input = node;
+            }}/>
+            <button onClick={() => {
+                dispatch({
+                    type: 'ADD_TODO',
+                    id: nextTodoId++,
+                    text: input.value
+                });
+                input.value = '';
+            }}>
+                Add Todo
+            </button>
+        </div>
+    )
+};
+// The default behavior here is to not subscribe to the store and inject dispatch to props
+AddTodo = connect()(AddTodo);
+```
+
+## Generating Containers with connect() from ReactRedux (FooterLink)
+
+```javascript
+const mapStateToLinkProps = (state, ownProps) => {
+    return {
+        active: ownProps.filter === state.visibilityFilter
+    };
+};
+
+const mapDispatchToLinkProps = (dispatch, ownProps) => {
+    return {
+        onClick: () => {
+            dispatch({
+                type: 'SET_VISIBILITY_FILTER',
+                filter: ownProps.filter
+            });
+        }
+    }
+};
+
+const FilterLink = connect(
+    mapStateToLinkProps,
+    mapDispatchToLinkProps
+)(Link);
+```
+
+## Extracting Action Creators
+
+```javascript
+// Action Creators
+let nextTodoId = 0;
+const addTodo = (text) => {
+    return {
+        type: 'ADD_TODO',
+        id: nextTodoId++,
+        text
+    };
+};
+
+const setVisibilityFilter = (filter) => {
+    return {
+        type: 'SET_VISIBILITY_FILTER',
+        filter
+    };
+};
+
+const toggleTodo = (id) => {
+    return {
+        type: 'TOGGLE_TODO',
+        id
+    };
+};
+```
+
+And just call those inside dispatch.
+
+```javascript
+dispatch(addTodo(input.value));
+```
