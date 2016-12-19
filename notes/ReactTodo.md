@@ -460,3 +460,26 @@ ReactDOM.render(
 ```
 
 ## Passing the store down explicitly via Props
+
+Up to now we've been using the store in a variable.
+
+```javascript
+const TodoApp  = ({ store }) => (
+    <div>
+        <AddTodo store={store} />
+        <VisibleTodoList store={store} />
+        <Footer store={store} />
+    </div>
+);
+
+ReactDOM.render(
+    <TodoApp
+        store={createStore(todoApp)}
+    />,
+    document.getElementById('root')
+);
+
+// for each one of the containers:
+const { store } = this.props;
+```
+
