@@ -83,7 +83,7 @@ The `.babelrc` file content is:
 Install the React packages:
 
 ```
-$ npm i react react-dom redux --save
+$ npm i react react-dom redux react-redux --save
 ```
 
 In `package.json`, include the following scripts for build and dev:
